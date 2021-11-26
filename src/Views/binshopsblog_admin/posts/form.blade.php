@@ -2,7 +2,8 @@
     <label for="language_list">Select Language</label>
     <select id="language_list" name='lang_id' class='form-control'>
         @foreach($language_list as $language)
-            <option  value='{{$language->id}}' @if($language->id == $selected_lang)selected="selected" @endif>
+            <option  value='{{$language->id}}'
+                @if($language->locale == App::getLocale())selected="selected" @endif>
                 {{$language->name}}
             </option>
         @endforeach
@@ -23,27 +24,19 @@
     <small id="blog_subtitle_help" class="form-text text-muted">The subtitle of the blog post (optional)</small>
 </div>
 
-
 <div class='row'>
-
-
     <div class='col-sm-12 col-md-4'>
-
-
         <div class="form-group">
             <label for="blog_slug">Blog Post Slug</label>
             <input type="text" class="form-control" id="blog_slug" aria-describedby="blog_slug_help" name='slug'
                    value="{{old("slug",$post_translation->slug)}}">
-            <small id="blog_slug_help" class="form-text text-muted">The slug (leave blank to auto generate) - i.e.{{route("binshopsblog.single", [app('request')->get('locale'), "your-slug"])}}</small>
+            <small id="blog_slug_help" class="form-text text-muted">The slug (leave blank to auto generate) - i.e.
+                {{route("binshopsblog.single", ["your-slug"])}}</small>
         </div>
-
     </div>
     <div class='col-sm-6 col-md-4'>
-
-
         <div class="form-group">
             <label for="blog_is_published">Published?</label>
-
             <select name='is_published' class='form-control' id='blog_is_published'
                     aria-describedby='blog_is_published_help'>
 
@@ -60,10 +53,8 @@
                 publicly viewable.
             </small>
         </div>
-
     </div>
     <div class='col-sm-6 col-md-4'>
-
         <div class="form-group">
             <label for="blog_posted_at">Posted at</label>
             <input type="text" class="form-control" id="blog_posted_at" aria-describedby="blog_posted_at_help"
@@ -75,32 +66,27 @@
                     HH:MM:SS</code> format.
             </small>
         </div>
-
-
     </div>
 </div>
-
 
 <div class="form-group">
     <label for="blog_post_body">Post Body
         @if(config("binshopsblog.echo_html"))
             (HTML)
         @else
-         (Html will be escaped)
+            (Html will be escaped)
         @endif
-
     </label>
-    <textarea style='min-height:600px;' class="form-control" id="blog_post_body" aria-describedby="blog_post_body_help"
-              name='post_body'>{{old("post_body",$post_translation->post_body)}}</textarea>
-
-
+    <textarea style='min-height:600px;' class="form-control" id="blog_post_body"
+              aria-describedby="blog_post_body_help"
+              name='post_body'>{{old("post_body",$post_translation->post_body)}}
+    </textarea>
     <div class='alert alert-warning'>
         If you want to add HTML content to be rendered, click source button at top left, and then paste your HTML snippet. (Youtube iFrames)
     </div>
 </div>
 
 @include("binshopsblog_admin::fields.partials.fields", ['fields' => $fields])
-
 @if(config("binshopsblog.use_custom_view_files",true))
     <div class="form-group">
         <label for="blog_use_view_file">Custom View File</label>
@@ -172,10 +158,10 @@
 
                 @if($post_translation->has_image($size_info['basic_key']))
                     <a style="color: darkred" href="{{route("binshopsblog.admin.remove_photo",[
-     $post_translation->slug,
-     $selected_lang
-    ]
-    )}}">Remove Image</a>
+                        $post_translation->slug,
+                        $selected_lang
+                    ]
+                    )}}">Remove Image</a>
                 @endif
             </div>
         @endforeach
@@ -197,7 +183,7 @@
     <div class='row'>
 
         @forelse($cat_ts as $translation)
-            <div class="form-check col-sm-6">
+            <div class="form-check col-sm-6 lang_id-{{$translation->lang_id}} categories">
                 <input class="category_checkbox" type="checkbox" value="1"
                        onclick="toggleCheckbox(event)"
                        @if(old("category.".$translation->category_id, $post->categories->contains($translation->category_id))) checked='checked'
@@ -220,8 +206,6 @@
         </div>
     </div>
 </div>
-
-<input id="selected_lang" name="selected_lang" type="number" value="-1" hidden>
 
 <script>
     SHOULD_AUTO_GEN_SLUG = false;
@@ -259,11 +243,9 @@
         }
     }
 
-
     /* Generate the slug field, if it was not touched by the user (or if it was an empty string) */
     function populate_slug_field() {
         var cat_slug = document.getElementById('blog_slug');
-
         if (cat_slug.value.length < 1) {
             // if the slug field is empty, make sure it auto generates
             SHOULD_AUTO_GEN_SLUG = true;
@@ -286,6 +268,34 @@
         SHOULD_AUTO_GEN_SLUG = false; // there is already a value in #category_slug, so lets pretend it was changed already.
     }
 
+    let select = document.getElementById("language_list");
+    select.addEventListener("change", function(){
+        toggleCategories(this.value);
+    });
+
+    let defaultSelect = document.getElementsByClassName('category_checkbox')
+    for(let item = 0; item < select.length; item++) {
+        if(select[item].selected == true) {
+            toggleCategories(select[item].value);
+        }
+    };
+
+    function toggleCategories(lang_id){
+        let categories = document.getElementsByClassName('categories')
+        for(let item = 0; item < categories.length; item++) {
+            categories[item].hidden = false
+            for (let child = 0; child < categories[item].children.length; child++) {
+                categories[item].children[child].disabled = false
+            }
+        }
+        categories = document.getElementsByClassName('lang_id-' + lang_id)
+        for(let item = 0; item < categories.length; item++) {
+            categories[item].hidden = true
+            for (let child = 0; child < categories[item].children.length; child++) {
+                categories[item].children[child].disabled = true
+            }
+        }
+    }
 </script>
 
 @if( config("binshopsblog.use_wysiwyg") && config("binshopsblog.echo_html"))

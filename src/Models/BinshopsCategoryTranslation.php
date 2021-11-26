@@ -30,14 +30,14 @@ class BinshopsCategoryTranslation extends Model
      */
     public function language()
     {
-        return $this->hasOne(BinshopsLanguage::class,"lang_id");
+        return $this->hasOne(BinshopsLanguage::class,"id");
     }
 
     /**
      * Returns the public facing URL of showing blog posts in this category
      * @return string
      */
-    public function url($loacle)
+    public function url()
     {
         $theChainString = "";
         $cat = $this->category()->get();
@@ -45,7 +45,7 @@ class BinshopsCategoryTranslation extends Model
         foreach ($chain as $category){
             $theChainString .=  "/" . $category->categoryTranslations()->where('lang_id' , $this->lang_id)->first()->slug;
         }
-        return route("binshopsblog.view_category",[$loacle, $theChainString]);
+        return route("binshopsblog.view_category",[$theChainString]);
     }
 
     /**

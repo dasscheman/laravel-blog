@@ -8,7 +8,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use BinshopsBlog\Interfaces\BaseRequestInterface;
 use BinshopsBlog\Events\BlogPostAdded;
-use BinshopsBlog\Events\BlogPostEdited;
 use BinshopsBlog\Events\BlogPostWillBeDeleted;
 use BinshopsBlog\Helpers;
 use BinshopsBlog\Middleware\LoadLanguage;
@@ -22,10 +21,10 @@ use BinshopsBlog\Models\BinshopsPost;
 use BinshopsBlog\Models\BinshopsPostTranslation;
 use BinshopsBlog\Models\BinshopsUploadedPhoto;
 use BinshopsBlog\Requests\CreateBinshopsBlogPostRequest;
-use BinshopsBlog\Requests\CreateBinshopsPostToggleRequest;
 use BinshopsBlog\Requests\DeleteBinshopsBlogPostRequest;
 use BinshopsBlog\Requests\UpdateBinshopsBlogPostRequest;
 use BinshopsBlog\Traits\UploadFileTrait;
+use Illuminate\Support\Facades\App;
 
 /**
  * Class BinshopsAdminController
@@ -34,6 +33,7 @@ use BinshopsBlog\Traits\UploadFileTrait;
 class BinshopsAdminController extends Controller
 {
     use UploadFileTrait;
+    private $lang_id;
 
     /**
      * BinshopsAdminController constructor.
@@ -44,6 +44,7 @@ class BinshopsAdminController extends Controller
         $this->middleware(LoadLanguage::class);
         $this->middleware(PackageSetup::class);
 
+        $this->lang_id = BinshopsLanguage::where('locale', App::getLocale())->first()->id;
         if (!is_array(config("binshopsblog"))) {
             throw new \RuntimeException('The config/binshopsblog.php does not exist. Publish the vendor files for the BinshopsBlog package by running the php artisan publish:vendor command');
         }
@@ -57,13 +58,13 @@ class BinshopsAdminController extends Controller
      */
     public function index(Request $request)
     {
-        $language_id = $request->get('language_id');
-        $posts = BinshopsPostTranslation::orderBy("post_id", "desc")->where('lang_id', $language_id)
+        $posts = BinshopsPost::orderBy("posted_at", "desc")
             ->paginate(10);
+        $languages = BinshopsLanguage::all();
 
         return view("binshopsblog_admin::index", [
-            'post_translations'=>$posts,
-            'language_id' => $language_id
+            'posts' => $posts,
+            'languages' => $languages
         ]);
     }
 
@@ -73,18 +74,20 @@ class BinshopsAdminController extends Controller
      */
     public function create_post(Request $request)
     {
-        $language_id = $request->get('language_id');
-        $language_list = BinshopsLanguage::where('active', true)->get();
-        $ts = BinshopsCategoryTranslation::where("lang_id", $language_id)->limit(1000)->get();
+        $post = new BinshopsPost();
+        if ($request->get('locale') !== null) {
+            $this->lang_id = BinshopsLanguage::where('locale', $request->get('locale'))->first()->id;
+        }
 
-        $new_post = new BinshopsPost();
-        $new_post->is_published = true;
+        $ts = BinshopsCategoryTranslation::limit(1000)->get();
+        if ($request->get('post_id') != null) {
+            $post = new BinshopsPost([$request->get('post_id')]);
+        }
 
         return view("binshopsblog_admin::posts.add_post", [
             'cat_ts' => $ts,
-            'language_list' => $language_list,
-            'selected_lang' => $language_id,
-            'post' => $new_post,
+            'post' => $post,
+            'language_list' => BinshopsLanguage::where('active', true)->get(),
             'post_translation' => new \BinshopsBlog\Models\BinshopsPostTranslation(),
             'post_id' => -1,
             'fields' => BinshopsField::all()
@@ -137,6 +140,7 @@ class BinshopsAdminController extends Controller
             $translation->meta_desc = $request['meta_desc'];
             $translation->slug = $request['slug'];
             $translation->use_view_file = $request['use_view_file'];
+            $translation->post_id = $new_blog_post->id;
             $translation->lang_id = $request['lang_id'];
 
             DB::beginTransaction();
@@ -265,59 +269,16 @@ class BinshopsAdminController extends Controller
      * @param $blogPostId
      * @return mixed
      */
-    public function edit_post($blogPostId, Request $request)
+    public function edit_post(Request $request, $blogPostTransId)
     {
-        $language_id = $request->get('language_id');
-
-        $post_translation = BinshopsPostTranslation::where(
-            [
-                ['lang_id', '=', $language_id],
-                ['post_id', '=', $blogPostId]
-            ]
-        )->first();
-
-        $post = BinshopsPost::findOrFail($blogPostId);
+        $post_translation = BinshopsPostTranslation::find($blogPostTransId);
+        $post = BinshopsPost::findOrFail($post_translation->post_id);
         $language_list = BinshopsLanguage::where('active', true)->get();
-        $ts = BinshopsCategoryTranslation::where("lang_id", $language_id)->limit(1000)->get();
+        $ts = BinshopsCategoryTranslation::limit(1000)->get();
 
         return view("binshopsblog_admin::posts.edit_post", [
             'cat_ts' => $ts,
             'language_list' => $language_list,
-            'selected_lang' => $language_id,
-            'selected_locale' => BinshopsLanguage::where('id', $language_id)->first()->locale,
-            'post' => $post,
-            'post_translation' => $post_translation,
-            'fields' => BinshopsField::all()
-        ]);
-    }
-
-    /**
-     * Show form to edit post
-     *
-     * @param $blogPostId
-     * @return mixed
-     */
-    public function edit_post_toggle($blogPostId, Request $request)
-    {
-        $post_translation = BinshopsPostTranslation::where(
-            [
-                ['lang_id', '=', $request['selected_lang']],
-                ['post_id', '=', $blogPostId]
-            ]
-        )->first();
-        if (!$post_translation) {
-            $post_translation = new BinshopsPostTranslation();
-        }
-
-        $post = BinshopsPost::findOrFail($blogPostId);
-        $language_list = BinshopsLanguage::where('active', true)->get();
-        $ts = BinshopsCategoryTranslation::where("lang_id", $request['selected_lang'])->limit(1000)->get();
-
-        return view("binshopsblog_admin::posts.edit_post", [
-            'cat_ts' => $ts,
-            'language_list' => $language_list,
-            'selected_lang' => $request['selected_lang'],
-            'selected_locale' => BinshopsLanguage::where('id', $request['selected_lang'])->first()->locale,
             'post' => $post,
             'post_translation' => $post_translation,
             'fields' => BinshopsField::all()
@@ -374,7 +335,6 @@ class BinshopsAdminController extends Controller
 
                 $translation->post_id = $new_blog_post->id;
                 $translation->saveOrFail();
-
                 $new_blog_post->categories()->sync($request->categories());
                 Helpers::flash_message("Post Updated");
 
@@ -438,7 +398,6 @@ class BinshopsAdminController extends Controller
     public function destroy_post(DeleteBinshopsBlogPostRequest $request, $blogPostId)
     {
         $post = BinshopsPost::findOrFail($blogPostId);
-
         BinshopsFieldValue::where('post_id', $blogPostId)->delete();
         //archive deleted post
 

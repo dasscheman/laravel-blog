@@ -48,6 +48,13 @@ class BinshopsPost extends Model
         return $this->hasMany(BinshopsPostTranslation::class, "post_id");
     }
 
+    public function getTranslationById($langId)
+    {
+        return $this->hasMany(BinshopsPostTranslation::class, 'post_id')
+            ->where('lang_id', $langId)
+            ->first();
+    }
+
     /**
      * The "booting" method of the model.
      *
