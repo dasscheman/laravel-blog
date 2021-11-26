@@ -14,6 +14,8 @@ use BinshopsBlog\Middleware\LoadLanguage;
 use BinshopsBlog\Middleware\PackageSetup;
 use BinshopsBlog\Middleware\UserCanManageBlogPosts;
 use BinshopsBlog\Models\BinshopsCategoryTranslation;
+use BinshopsBlog\Models\BinshopsField;
+use BinshopsBlog\Models\BinshopsFieldValue;
 use BinshopsBlog\Models\BinshopsLanguage;
 use BinshopsBlog\Models\BinshopsPost;
 use BinshopsBlog\Models\BinshopsPostTranslation;
@@ -87,6 +89,8 @@ class BinshopsAdminController extends Controller
             'post' => $post,
             'language_list' => BinshopsLanguage::where('active', true)->get(),
             'post_translation' => new \BinshopsBlog\Models\BinshopsPostTranslation(),
+            'post_id' => -1,
+            'fields' => BinshopsField::all()
         ]);
     }
 
@@ -128,8 +132,6 @@ class BinshopsAdminController extends Controller
         } else {
             $new_blog_post->is_published = $request['is_published'];
             $new_blog_post->user_id = \Auth::user()->id;
-            $new_blog_post->save();
-
             $translation->title = $request['title'];
             $translation->subtitle = $request['subtitle'];
             $translation->short_description = $request['short_description'];
@@ -138,16 +140,127 @@ class BinshopsAdminController extends Controller
             $translation->meta_desc = $request['meta_desc'];
             $translation->slug = $request['slug'];
             $translation->use_view_file = $request['use_view_file'];
-            $translation->lang_id =  $request['lang_id'];
             $translation->post_id = $new_blog_post->id;
-            $this->processUploadedImages($request, $translation);
-            $translation->save();
-            $new_blog_post->categories()->sync($request->categories());
-            Helpers::flash_message("Added post");
-            event(new BlogPostAdded($new_blog_post));
+            $translation->lang_id = $request['lang_id'];
+
+            DB::beginTransaction();
+            try {
+                $new_blog_post->loadFields($request->categories());
+                $new_blog_post->saveOrFail();
+                $new_blog_post->updateFieldValues($request->post());
+
+                $this->processUploadedImages($request, $translation);
+
+                $translation->post_id = $new_blog_post->id;
+                $translation->saveOrFail();
+
+                $new_blog_post->categories()->sync($request->categories());
+                Helpers::flash_message("Post Updated");
+                event(new BlogPostAdded($new_blog_post));
+
+                //if there is not error/exception in the above code, it'll commit
+                DB::commit();
+            } catch (\Exception $e) {
+                //if there is an error/exception in the above code before commit, it'll rollback
+                DB::rollBack();
+            }
         }
 
         return redirect(route('binshopsblog.admin.index'));
+    }
+
+    /**
+     *  This method is called whenever a language is selected
+     */
+    public function store_post_toggle(CreateBinshopsBlogPostRequest $request)
+    {
+        $new_blog_post = null;
+        $translation = BinshopsPostTranslation::where(
+            [
+                ['post_id','=',$request['post_id']],
+                ['lang_id', '=', $request['lang_id']]
+            ]
+        )->first();
+
+        if (!$translation) {
+            $translation = new BinshopsPostTranslation();
+        }
+
+        if ($request['post_id'] == -1 || $request['post_id'] == null) {
+            //cretes new post
+            $new_blog_post = new BinshopsPost();
+            $new_blog_post->is_published = true;
+            $new_blog_post->posted_at = Carbon::now();
+        } else {
+            //edits post
+            $new_blog_post = BinshopsPost::findOrFail($request['post_id']);
+        }
+
+        if ($request['slug']) {
+            $post_exists = $this->check_if_same_post_exists($request['slug'], $request['lang_id'], $new_blog_post->id);
+            if ($post_exists) {
+                Helpers::flash_message("Post already exists - try to change the slug for this language");
+            } else {
+                $new_blog_post->is_published = $request['is_published'];
+                $new_blog_post->user_id = \Auth::user()->id;
+
+                $translation->title = $request['title'];
+                $translation->subtitle = $request['subtitle'];
+                $translation->short_description = $request['short_description'];
+                $translation->post_body = $request['post_body'];
+                $translation->seo_title = $request['seo_title'];
+                $translation->meta_desc = $request['meta_desc'];
+                $translation->slug = $request['slug'];
+                $translation->use_view_file = $request['use_view_file'];
+                $translation->lang_id = $request['lang_id'];
+
+                DB::beginTransaction();
+                try {
+                    $new_blog_post->loadFields($request->categories());
+                    $new_blog_post->saveOrFail();
+                    $new_blog_post->updateFieldValues($request->post());
+
+                    $this->processUploadedImages($request, $translation);
+                    $translation->post_id = $new_blog_post->id;
+                    $translation->saveOrFail();
+
+                    $new_blog_post->categories()->sync($request->categories());
+                    Helpers::flash_message("Post Updated");
+                    event(new BlogPostAdded($new_blog_post));
+
+                    //if there is not error/exception in the above code, it'll commit
+                    DB::commit();
+                } catch (\Exception $e) {
+                    //if there is an error/exception in the above code before commit, it'll rollback
+                    DB::rollBack();
+                }
+            }
+        }
+
+        //todo: generate event
+
+        $language_id = $request->get('language_id');
+        $language_list = BinshopsLanguage::where('active', true)->get();
+        $ts = BinshopsCategoryTranslation::where("lang_id", $language_id)->limit(1000)->get();
+
+        $translation = BinshopsPostTranslation::where(
+            [
+                ['post_id','=',$request['post_id']],
+                ['lang_id', '=', $request['selected_lang']]
+            ]
+        )->first();
+        if (!$translation) {
+            $translation = new BinshopsPostTranslation();
+        }
+
+        return view("binshopsblog_admin::posts.add_post", [
+            'cat_ts' => $ts,
+            'language_list' => $language_list,
+            'selected_lang' => $request['selected_lang'],
+            'post_translation' => $translation,
+            'post' => $new_blog_post,
+            'post_id' => $new_blog_post->id
+        ]);
     }
 
     /**
@@ -168,6 +281,7 @@ class BinshopsAdminController extends Controller
             'language_list' => $language_list,
             'post' => $post,
             'post_translation' => $post_translation,
+            'fields' => BinshopsField::all()
         ]);
     }
 
@@ -213,13 +327,14 @@ class BinshopsAdminController extends Controller
 
             DB::beginTransaction();
             try {
+                $new_blog_post->loadFields($request->categories());
                 $new_blog_post->saveOrFail();
+                $new_blog_post->updateFieldValues($request->post());
 
                 $this->processUploadedImages($request, $translation);
 
                 $translation->post_id = $new_blog_post->id;
                 $translation->saveOrFail();
-
                 $new_blog_post->categories()->sync($request->categories());
                 Helpers::flash_message("Post Updated");
 
@@ -283,7 +398,7 @@ class BinshopsAdminController extends Controller
     public function destroy_post(DeleteBinshopsBlogPostRequest $request, $blogPostId)
     {
         $post = BinshopsPost::findOrFail($blogPostId);
-
+        BinshopsFieldValue::where('post_id', $blogPostId)->delete();
         //archive deleted post
 
         $post->delete();

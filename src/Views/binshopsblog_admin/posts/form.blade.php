@@ -9,7 +9,6 @@
         @endforeach
     </select>
 </div>
-
 <div class="form-group">
     <label for="blog_title">Blog Post Title</label>
     <input type="text" class="form-control" required id="blog_title" aria-describedby="blog_title_help" name='title'
@@ -87,6 +86,7 @@
     </div>
 </div>
 
+@include("binshopsblog_admin::fields.partials.fields", ['fields' => $fields])
 @if(config("binshopsblog.use_custom_view_files",true))
     <div class="form-group">
         <label for="blog_use_view_file">Custom View File</label>
@@ -209,6 +209,40 @@
 
 <script>
     SHOULD_AUTO_GEN_SLUG = false;
+    enableField()
+    function toggleCheckbox(event){
+        let categoryId = event.target.id.replace('category_check','');
+        if (event.target.checked){
+            let fieldCategories = document.getElementsByClassName('field_category_' + categoryId)
+            for (let i=0; i < fieldCategories.length; i++) {
+                fieldCategories[i].disabled = false;
+            }
+            return
+        }
+        // We cannot be sure which categories are selected, therefore, disable everything and check everything.
+        let fieldCategories = document.getElementsByClassName('field_category')
+        for (let i=0; i < fieldCategories.length; i++) {
+            if (fieldCategories[i].classList.contains('no_categories')) {
+                continue;
+            }
+            fieldCategories[i].disabled = true;
+        }
+        enableField()
+    }
+
+    function enableField() {
+        let categoriesCheckbox = document.getElementsByClassName('category_checkbox')
+        for (let i=0; i < categoriesCheckbox.length; i++) {
+            if (categoriesCheckbox[i].checked) {
+                let categoryId = categoriesCheckbox[i].id.replace('category_check','');
+                let fieldCategories = document.getElementsByClassName('field_category_' + categoryId)
+                for (let i=0; i < fieldCategories.length; i++) {
+                    fieldCategories[i].disabled = false;
+                }
+            }
+        }
+    }
+
     /* Generate the slug field, if it was not touched by the user (or if it was an empty string) */
     function populate_slug_field() {
         var cat_slug = document.getElementById('blog_slug');
