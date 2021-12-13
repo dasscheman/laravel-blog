@@ -1,6 +1,5 @@
 <?php
 
-
 namespace BinshopsBlog\Models;
 
 use Cviebrock\EloquentSluggable\Sluggable;
@@ -142,16 +141,15 @@ class BinshopsPostTranslation extends Model implements SearchResultInterface
         return nl2br(e($intro));
     }
 
-    public function post_body_output()
+    public function postBodyOutput($cutoff = false)
     {
+        // just use the plain ->post_body
+        $return = $this->post_body;
+
         if (config("binshopsblog.use_custom_view_files") && $this->use_view_file) {
             // using custom view files is enabled, and this post has a use_view_file set, so render it:
             $return = view("binshopsblog::partials.use_view_file", ['post' => $this])->render();
-        } else {
-            // just use the plain ->post_body
-            $return = $this->post_body;
         }
-
 
         if (!config("binshopsblog.echo_html")) {
             // if this is not true, then we should escape the output
@@ -165,9 +163,35 @@ class BinshopsPostTranslation extends Model implements SearchResultInterface
             }
         }
 
+        if ($cutoff && !config('binshopsblog.show_full_text_at_list')) {
+            $return = mb_strimwidth($return, 0, config('binshopsblog.show_number_characters'), "...");
+            $return = $this->closeTags($return);
+        }
+
         return $return;
     }
 
+    public function closeTags($html) {
+        preg_match_all('#<([a-z]+)(?: .*)?(?<![/|/ ])>#iU', $html, $result);
+        $openedtags = $result[1];
+        preg_match_all('#</([a-z]+)>#iU', $html, $result);
+
+        $closedtags = $result[1];
+        $len_opened = count($openedtags);
+
+        if (count($closedtags) == $len_opened) {
+            return $html;
+        }
+        $openedtags = array_reverse($openedtags);
+        for ($i=0; $i < $len_opened; $i++) {
+            if (!in_array($openedtags[$i], $closedtags)) {
+                $html .= '</'.$openedtags[$i].'>';
+            } else {
+                unset($closedtags[array_search($openedtags[$i], $closedtags)]);
+            }
+        }
+        return $html;
+    }
 
     /**
      * Throws an exception if $size is not valid
@@ -176,7 +200,7 @@ class BinshopsPostTranslation extends Model implements SearchResultInterface
      * @return bool
      * @throws \InvalidArgumentException
      */
-    protected function check_valid_image_size(string $size = 'medium')
+    protected function check_valid_image_size($size = 'medium')
     {
 
 
