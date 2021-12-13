@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class BinshopsCategoryTranslation extends Model
 {
-
     public $fillable = [
         'category_id',
         'category_name',
@@ -30,30 +29,7 @@ class BinshopsCategoryTranslation extends Model
      */
     public function language()
     {
-        return $this->hasOne(BinshopsLanguage::class,"id");
+        return $this->hasOne(BinshopsLanguage::class, 'id', 'lang_id');
     }
 
-    /**
-     * Returns the public facing URL of showing blog posts in this category
-     * @return string
-     */
-    public function url()
-    {
-        $theChainString = "";
-        $cat = $this->category()->get();
-        $chain = $cat[0]->getAncestorsAndSelf();
-        foreach ($chain as $category){
-            $theChainString .=  "/" . $category->categoryTranslations()->where('lang_id' , $this->lang_id)->first()->slug;
-        }
-        return route("binshopsblog.view_category",[$theChainString]);
-    }
-
-    /**
-     * Returns the URL for an admin user to edit this category
-     * @return string
-     */
-    public function edit_url()
-    {
-        return route("binshopsblog.admin.categories.edit_category", $this->category_id);
-    }
 }

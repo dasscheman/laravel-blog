@@ -7,9 +7,7 @@
             <a target='_blank' href='{{$post_translation->url()}}' class='float-right btn btn-primary'>View post</a>
         @endif
     </h5>
-
     <form id="edit-post-form" method='post' action='{{route("binshopsblog.admin.update_post",$post->id)}}'  enctype="multipart/form-data" >
-
         <p>
             To apply changes, click save changes for each language.
         </p>

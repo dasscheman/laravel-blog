@@ -1,7 +1,7 @@
 @extends("layouts.app",['title'=>$title])
 
 @section('blog-custom-css')
-    <link type="text/css" href="{{ asset('binshops-blog.css') }}" rel="stylesheet">
+    <link type="text/css" href="{{ asset('blog/css/binshops-blog.css') }}" rel="stylesheet">
 @endsection
 
 @section("content")
@@ -18,24 +18,9 @@
                 </p>
             </div>
         @endif
-
-        <div class="row">
+        {{ $posts->links() }}
+{{--        <div class="row"`>--}}
             <div class="col-md-9">
-
-                @if($category_chain)
-                    <div class="container">
-                        <div class="row">
-                            <div class="col-md-12">
-                                @forelse($category_chain as $cat)
-                                    <a href="{{$cat->categoryTranslation->url()}}">
-                                        <span class="cat1">{{$cat->categoryTranslations[0]['category_name']}}</span>
-                                    </a>
-                                @empty @endforelse
-                            </div>
-                        </div>
-                    </div>
-                @endif
-
                 @if(isset($binshopsblog_category) && $binshopsblog_category)
                     <h2 class='text-center'> {{$binshopsblog_category->category_name}}</h2>
 
@@ -45,44 +30,29 @@
 
                 @endif
 
-                <div class="container">
-                    <div class="row">
-                        @forelse($posts as $post)
-                            @include("binshopsblog::partials.index_loop")
-                        @empty
-                            <div class="col-md-12">
-                                <div class='alert alert-danger'>No posts!</div>
-                            </div>
-                        @endforelse
-                    </div>
+                <div class="card-columns">
+{{--                    <div class="container">--}}
+{{--                        <div class="row">--}}
+                            @forelse($posts as $post)
+{{--                                <div class="card">--}}
+{{--                                        sadfadsf--}}
+                                    @include("binshopsblog::partials.index_loop")
+{{--                                </div>--}}
+{{--                            @endforeach--}}
+                            @empty
+                                <div class="col-md-12">
+                                    <div class='alert alert-danger'>No posts!</div>
+                                </div>
+                            @endforelse
+{{--                        </div>--}}
+{{--                    </div>--}}
                 </div>
             </div>
-            <div class="col-md-3">
-                <h6>Blog Categories</h6>
-                <ul class="binshops-cat-hierarchy">
-                    @if($categories)
-                        @include("binshopsblog::partials._category_partial", [
-                            'category_tree' => $categories,
-                            'name_chain' => $nameChain = ""
-                            ])
-                    @else
-                        <span>No Categories</span>
-                    @endif
-                </ul>
-            </div>
-        </div>
+{{--        </div>--}}
 
         @if (config('binshopsblog.search.search_enabled') )
             @include('binshopsblog::sitewide.search_form')
-        @endif
-        <div class="row">
-            <div class="col-md-12 text-center">
-                @foreach($lang_list as $lang)
-                    <a href="{{route('language', [$lang->locale])}}">
-                        <span>{{$lang->name}}</span>
-                    </a>
-                @endforeach
-            </div>
-        </div>
+            @endif
     </div>
+
 @endsection

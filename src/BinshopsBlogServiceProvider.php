@@ -2,15 +2,15 @@
 
 namespace BinshopsBlog;
 
+use BinshopsBlog\Middleware\LoadLanguage;
 use BinshopsBlog\Models\BinshopsPostTranslation;
-use Illuminate\Support\ServiceProvider;
-use BinshopsBlog\Models\BinshopsPost;
 use BinshopsBlog\Laravel\Fulltext\Commands\Index;
 use BinshopsBlog\Laravel\Fulltext\Commands\IndexOne;
 use BinshopsBlog\Laravel\Fulltext\Commands\UnindexOne;
 use BinshopsBlog\Laravel\Fulltext\ModelObserver;
 use BinshopsBlog\Laravel\Fulltext\Search;
 use BinshopsBlog\Laravel\Fulltext\SearchInterface;
+use Illuminate\Support\ServiceProvider;
 
 class BinshopsBlogServiceProvider extends ServiceProvider
 {
@@ -33,11 +33,16 @@ class BinshopsBlogServiceProvider extends ServiceProvider
             ModelObserver::disableSyncingFor(BinshopsPostTranslation::class);
         }
 
+        $router = $this->app['router'];
+        $router->pushMiddlewareToGroup('web', LoadLanguage::class);
+
         if (config("binshopsblog.include_default_routes", true)) {
             include(__DIR__ . "/routes.php");
         }
 
         foreach ([
+                     '2021_11_27_005425_move_category_translations_table.php',
+                     '2021_11_25_093500_edit_binshops_fields_table.php',
                      '2021_07_30_093700_create_binshops_fields_categories_table.php',
                      '2021_07_30_093600_create_binshops_fields_values_table.php',
                      '2021_07_30_093500_create_binshops_fields_table.php',
@@ -57,17 +62,18 @@ class BinshopsBlogServiceProvider extends ServiceProvider
             ]);
 
         }
-
         $this->publishes([
             __DIR__ . '/Views/binshopsblog' => base_path('resources/views/vendor/binshopsblog'),
             __DIR__ . '/Config/binshopsblog.php' => config_path('binshopsblog.php'),
-            __DIR__ . '/css/binshopsblog_admin_css.css' => public_path('binshopsblog_admin_css.css'),
-            __DIR__ . '/css/binshops-blog.css' => public_path('binshops-blog.css'),
-            __DIR__ . '/css/admin-setup.css' => public_path('admin-setup.css'),
-            __DIR__ . '/js/binshops-blog.js' => public_path('binshops-blog.js'),
         ]);
 
-
+        $this->publishes([
+            __DIR__ . '/css/binshopsblog_admin_css.css' => public_path('blog/css/binshopsblog_admin_css.css'),
+            __DIR__ . '/css/binshops-blog.css' => public_path('blog/css/binshops-blog.css'),
+            __DIR__ . '/css/admin-setup.css' => public_path('blog/css/admin-setup.css'),
+            __DIR__ . '/js/binshops-blog.js' => public_path('blog/js/binshops-blog.js'),
+            __DIR__ . '/js/category.js' => public_path('blog/js/category.js'),
+        ], 'public');
     }
 
     /**

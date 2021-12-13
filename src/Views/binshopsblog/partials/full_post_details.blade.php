@@ -6,10 +6,11 @@
 <h1 class='blog_title'>{{$post->title}}</h1>
 <h5 class='blog_subtitle'>{{$post->subtitle}}</h5>
 
+
 <?=$post->image_tag("medium", false, 'd-block mx-auto'); ?>
 
 <p class="blog_body_content">
-    {!! $post->post_body_output() !!}
+    {!! $post->postBodyOutput() !!}
 
     {{--@if(config("binshopsblog.use_custom_view_files")  && $post->use_view_file)--}}
     {{--                                // use a custom blade file for the output of those blog post--}}
@@ -19,13 +20,6 @@
     {{--   {{ $post->post_body }}          // for safe escaping --}}
     {{--@endif--}}
 </p>
-@foreach($fieldvalues as $value)
-    <p>
-        <b>{!! $value->field->label !!}: </b>
-        {!! $value->value !!}
-    </p>
-@endforeach
-
 
 <hr/>
 

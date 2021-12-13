@@ -44,12 +44,10 @@ class BinshopsAdminController extends Controller
         $this->middleware(LoadLanguage::class);
         $this->middleware(PackageSetup::class);
 
-        $this->lang_id = BinshopsLanguage::where('locale', App::getLocale())->first()->id;
         if (!is_array(config("binshopsblog"))) {
             throw new \RuntimeException('The config/binshopsblog.php does not exist. Publish the vendor files for the BinshopsBlog package by running the php artisan publish:vendor command');
         }
     }
-
 
     /**
      * View all posts
@@ -74,9 +72,10 @@ class BinshopsAdminController extends Controller
      */
     public function create_post(Request $request)
     {
+        $locale = App::getLocale();
         $post = new BinshopsPost();
         if ($request->get('locale') !== null) {
-            $this->lang_id = BinshopsLanguage::where('locale', $request->get('locale'))->first()->id;
+            $locale = BinshopsLanguage::where('locale', $request->get('locale'))->first()->locale;
         }
 
         $ts = BinshopsCategoryTranslation::limit(1000)->get();
@@ -87,7 +86,7 @@ class BinshopsAdminController extends Controller
         return view("binshopsblog_admin::posts.add_post", [
             'cat_ts' => $ts,
             'post' => $post,
-            'language_list' => BinshopsLanguage::where('active', true)->get(),
+            'locale' => $locale,
             'post_translation' => new \BinshopsBlog\Models\BinshopsPostTranslation(),
             'post_id' => -1,
             'fields' => BinshopsField::all()
@@ -273,12 +272,10 @@ class BinshopsAdminController extends Controller
     {
         $post_translation = BinshopsPostTranslation::find($blogPostTransId);
         $post = BinshopsPost::findOrFail($post_translation->post_id);
-        $language_list = BinshopsLanguage::where('active', true)->get();
         $ts = BinshopsCategoryTranslation::limit(1000)->get();
 
         return view("binshopsblog_admin::posts.edit_post", [
             'cat_ts' => $ts,
-            'language_list' => $language_list,
             'post' => $post,
             'post_translation' => $post_translation,
             'fields' => BinshopsField::all()

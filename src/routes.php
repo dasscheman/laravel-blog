@@ -1,17 +1,26 @@
 <?php
 
+use Illuminate\Support\Facades\App;
+use BinshopsBlog\Models\BinshopsLanguage;
+
 Route::group(['middleware' => ['web'], 'namespace' => '\BinshopsBlog\Controllers'], function () {
-    Route::get('language/{locale}', function ($locale) {
-        app()->setLocale($locale);
-        session()->put('locale', $locale);
-        return redirect()->back();
-    })->name('language');
+    Route::group(['prefix'=>'language'], function () {
+        Route::group(['prefix'=>'{lang}'], function () {
+            Route::get('/', function ($lang) {
+                App::setLocale($lang);
+                session()->put('locale', $lang);
+                $lang = BinshopsLanguage::where('locale', App::getLocale())->first();
+                session()->put('lang_id', $lang->id);
+                return redirect('/');
+            });
+        });
+    });
+
+    Route::get('/', 'BinshopsReaderController@index')
+        ->name('binshopsblog.index');
 
     /** The main public facing blog routes - show all posts, view a category, rss feed, view a single post, also the add comment route */
     Route::group(['prefix' => "/".config('binshopsblog.blog_prefix', 'blog')], function () {
-        Route::get('/', 'BinshopsReaderController@index')
-            ->name('binshopsblog.index');
-
         Route::get('/search', 'BinshopsReaderController@search')
             ->name('binshopsblog.search');
 
@@ -80,7 +89,7 @@ Route::group(['middleware' => ['web'], 'namespace' => '\BinshopsBlog\Controllers
 
         //Removes post's photo
         Route::get(
-            '/remove_photo/{slug}/{lang_id}',
+            '/remove_photo/{slug}',
             'BinshopsAdminController@remove_photo'
         )
             ->name('binshopsblog.admin.remove_photo');
@@ -156,24 +165,34 @@ Route::group(['middleware' => ['web'], 'namespace' => '\BinshopsBlog\Controllers
         });
 
         Route::group(['prefix' => 'fields'], function () {
-            Route::get('/',
-                'BinshopsFieldAdminController@index')
+            Route::get(
+                '/',
+                'BinshopsFieldAdminController@index'
+            )
                 ->name('binshopsblog.admin.fields.index');
 
-            Route::get('/add_category',
-                'BinshopsFieldAdminController@create_field')
+            Route::get(
+                '/add_category',
+                'BinshopsFieldAdminController@create_field'
+            )
                 ->name('binshopsblog.admin.fields.create_field');
 
-            Route::post('/store_field',
-                'BinshopsFieldAdminController@store_field')
+            Route::post(
+                '/store_field',
+                'BinshopsFieldAdminController@store_field'
+            )
                 ->name('binshopsblog.admin.fields.store_field');
 
-            Route::get('/edit_field/{fieldId}',
-                'BinshopsFieldAdminController@edit_field')
+            Route::get(
+                '/edit_field/{fieldId}',
+                'BinshopsFieldAdminController@edit_field'
+            )
                 ->name('binshopsblog.admin.fields.edit_field');
 
-            Route::delete('/delete_field/{fieldId}',
-                'BinshopsFieldAdminController@destroy_field')
+            Route::delete(
+                '/delete_field/{fieldId}',
+                'BinshopsFieldAdminController@destroy_field'
+            )
                 ->name('binshopsblog.admin.fields.destroy_field');
         });
 

@@ -36,7 +36,7 @@ class BinshopsFieldCategory extends Model
      */
     public function category()
     {
-        return $this->belongsTo(BinshopsPost::class,"category_id");
+        return $this->belongsTo(BinshopsPost::class, "category_id");
     }
 
     /**
@@ -45,6 +45,6 @@ class BinshopsFieldCategory extends Model
      */
     public function field()
     {
-        return $this->belongsTo(BinshopsField::class,"field_id");
+        return $this->belongsTo(BinshopsField::class, "field_id");
     }
 }

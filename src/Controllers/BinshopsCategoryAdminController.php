@@ -11,7 +11,6 @@ use BinshopsBlog\Helpers;
 use BinshopsBlog\Middleware\LoadLanguage;
 use BinshopsBlog\Middleware\UserCanManageBlogPosts;
 use BinshopsBlog\Models\BinshopsCategory;
-use BinshopsBlog\Models\BinshopsCategoryTranslation;
 use BinshopsBlog\Models\BinshopsLanguage;
 use BinshopsBlog\Requests\DeleteBinshopsBlogCategoryRequest;
 use BinshopsBlog\Requests\StoreBinshopsBlogCategoryRequest;
@@ -32,7 +31,6 @@ class BinshopsCategoryAdminController extends Controller
     {
         $this->middleware(UserCanManageBlogPosts::class);
         $this->middleware(LoadLanguage::class);
-        $this->lang_id = BinshopsLanguage::where('locale', App::getLocale())->first()->id;
     }
 
     /**
@@ -42,8 +40,8 @@ class BinshopsCategoryAdminController extends Controller
      */
     public function index(Request $request)
     {
-        $categories = BinshopsCategoryTranslation::orderBy("category_id")
-            ->paginate(25);
+        $categories = BinshopsCategory::orderBy("id")
+            ->paginate(20);
         return view("binshopsblog_admin::categories.index", [
             'categories' => $categories,
         ]);
@@ -60,18 +58,13 @@ class BinshopsCategoryAdminController extends Controller
         }
 
         $language_list = BinshopsLanguage::where('active', true)->get();
-        $cat_list = BinshopsCategory::whereHas('categoryTranslations', function ($query) {
-            return $query->where('lang_id', '=', $this->lang_id);
-        })->get();
+        $cat_list = BinshopsCategory::where('lang_id', '=', $this->lang_id)->get();
 
         $rootList = BinshopsCategory::roots()->get();
         BinshopsCategory::loadSiblingsWithList($rootList);
 
-//        dd($language_list);
-
         return view("binshopsblog_admin::categories.add_category", [
             'category' => new \BinshopsBlog\Models\BinshopsCategory(),
-            'category_translation' => new \BinshopsBlog\Models\BinshopsCategoryTranslation(),
             'category_tree' => $cat_list,
             'cat_roots' => $rootList,
             'language_id' => $this->lang_id,
@@ -133,27 +126,15 @@ class BinshopsCategoryAdminController extends Controller
      * @param $categoryId
      * @return mixed
      */
-    public function edit_category($categoryId, Request $request)
+    public function edit_category(Request $request, $categoryId)
     {
-        if($request->get('language_id') !== null) {
-            $this->lang_id = $request->get('language_id');
-        }
         $language_list = BinshopsLanguage::where('active', true)->get();
-
         $category = BinshopsCategory::findOrFail($categoryId);
-        $cat_trans = BinshopsCategoryTranslation::where(
-            [
-                ['lang_id', '=', $this->lang_id],
-                ['category_id', '=', $categoryId]
-            ]
-        )->first();
 
         return view("binshopsblog_admin::categories.edit_category", [
             'category' => $category,
-            'category_translation' => $cat_trans,
-            'categories_list' => BinshopsCategoryTranslation::orderBy("category_id")->where('lang_id', $language_id)->get(),
-            'language_id' => $language_id,
-            'language_list' => $language_list
+            'categories_list' => BinshopsCategory::orderBy('id')->where('lang_id', $category->lang_id)->get(),
+//            'language_list' => $language_list
         ]);
     }
 

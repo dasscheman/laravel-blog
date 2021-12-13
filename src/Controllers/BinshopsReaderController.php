@@ -9,15 +9,16 @@ use BinshopsBlog\Laravel\Fulltext\Search;
 use BinshopsBlog\Models\BinshopsCategoryTranslation;
 use Illuminate\Http\Request;
 use BinshopsBlog\Captcha\UsesCaptcha;
-use BinshopsBlog\Laravel\Fulltext\Search;
+//use BinshopsBlog\Laravel\Fulltext\Search;
 use BinshopsBlog\Middleware\LoadLanguage;
 use BinshopsBlog\Models\BinshopsCategory;
-use BinshopsBlog\Models\BinshopsCategoryTranslation;
+//use BinshopsBlog\Models\BinshopsCategoryTranslation;
 use BinshopsBlog\Models\BinshopsLanguage;
 use BinshopsBlog\Models\BinshopsPostTranslation;
-use Carbon\Carbon;
-use Illuminate\Http\Request;
+//use Carbon\Carbon;
+//use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
+use Session;
 
 /**
  * Class BinshopsReaderController
@@ -31,8 +32,13 @@ class BinshopsReaderController extends Controller
 
     public function __construct()
     {
-        $this->middleware(LoadLanguage::class, ['except' => ['changeLanguage']]);
-        $this->lang_id = BinshopsLanguage::where('locale', App::getLocale())->first()->id;
+//        $this->middleware(LoadLanguage::class, ['except' => ['changeLanguage']]);
+//        $this->middleware(LoadLanguage::class);
+//        dd('TEST' . App::getLocale());
+//        $this->middleware('local');
+//        dump(App::getLocale());
+//        $this->lang_id = BinshopsLanguage::where('locale', App::getLocale())->first()->id;
+//        dump($this->lang_id);
     }
 
     /**
@@ -42,7 +48,7 @@ class BinshopsReaderController extends Controller
      * @param null $category_slug
      * @return mixed
      */
-    public function index(Request $request, $category_slug = null)
+    public function index(Request $request, $categorySlug = null)
     {
         // the published_at + is_published are handled by BinshopsBlogPublishedScope,
         // and don't take effect if the logged in user can manageb log posts
@@ -50,45 +56,43 @@ class BinshopsReaderController extends Controller
         $title = 'Blog Page'; // default title...
 
         $categoryChain = null;
-        $posts = array();
-        if ($category_slug) {
-            $category = BinshopsCategoryTranslation::where("slug", $category_slug)
+
+
+        $posts = BinshopsPostTranslation::where('lang_id', Session::get('lang_id'))
+            ->with(['post' => function ($query) {
+                $query->where('is_published', '=', true);
+                $query->where('posted_at', '<', Carbon::now()->format('Y-m-d H:i:s'));
+                $query->orderBy('posted_at', 'desc');
+            }])->paginate(config('binshopsblog.per_page', 10));
+
+        if ($categorySlug) {
+            $category = BinshopsCategoryTranslation::where("slug", $categorySlug)
                 ->with('category')
                 ->firstOrFail()->category;
             $categoryChain = $category->getAncestorsAndSelf();
-            $posts_1 = $category->posts()->where("binshops_post_categories.category_id", $category->id)
-                ->with([ 'postTranslations' => function ($query) use ($request) {
-                    $query->where("lang_id", '=', $this->lang_id);
-                }
-            ])->paginate(config("binshopsblog.per_page", 10));
 
-            foreach ($posts_1 as $post) {
-                $trans = $post->postTranslation;
-                if (isset($trans->post)) {
-                    $trans->post = $post;
-                    array_push($posts, $trans);
-                }
-            }
+            $posts = BinshopsPostTranslation::where('lang_id', Session::get('lang_id'))
+                ->whereHas('post', function ($query) use ($category) {
+                    $query->whereHas('categories', function ($q) use ($category) {
+                        $q->where('binshops_post_categories.category_id', $category->id);
+                    })
+                        ->where('is_published', '=', true)
+                        ->where('posted_at', '<', Carbon::now()->format('Y-m-d H:i:s'))
+                        ->orderBy('posted_at', 'desc');
+                })->paginate(config('binshopsblog.per_page', 10));
 
             // at the moment we handle this special case (viewing a category) by hard coding in the following two lines.
             // You can easily override this in the view files.
             \View::share('binshopsblog_category', $category); // so the view can say "You are viewing
                                                              // $CATEGORYNAME category posts"
-            $title = 'Posts in ' . $category->category_name . " category"; // hardcode title here...
-        } else {
-            $posts = BinshopsPostTranslation::where('lang_id', $request->get("lang_id"))
-                ->with(['post' => function ($query) {
-                    $query->where("is_published", '=', true);
-                    $query->where('posted_at', '<', Carbon::now()->format('Y-m-d H:i:s'));
-                    $query->orderBy("posted_at", "desc");
-                }])->paginate(config("binshopsblog.per_page", 10));
+            $title = 'Posts in ' . $category->category_name . ' category'; // hardcode title here...
         }
 
         //load category hierarchy
         $rootList = BinshopsCategory::roots()->get();
         BinshopsCategory::loadSiblingsWithList($rootList);
 
-        return view("binshopsblog::index", [
+        return view('binshopsblog::index', [
             'lang_list' => BinshopsLanguage::all('locale', 'name'),
             'category_chain' => $categoryChain,
             'categories' => $rootList,
@@ -151,8 +155,7 @@ class BinshopsReaderController extends Controller
     {
         // the published_at + is_published are handled by BinshopsBlogPublishedScope, and don't take effect if the logged in user can manage log posts
         $blog_post = BinshopsPostTranslation::where([
-            ["slug", "=", $blogPostSlug],
-            ['lang_id', "=" , $this->lang_id]
+            ["slug", "=", $blogPostSlug]
         ])->firstOrFail();
         $fieldValues = BinshopsFieldValue::where('post_id', $blog_post->post_id)->get();
 

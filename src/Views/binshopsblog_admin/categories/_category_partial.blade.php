@@ -1,11 +1,11 @@
 @foreach($category_tree as $category)
     @php
-        $ct = $category->categoryTranslations->where('lang_id', $language_id)->first();
+        $ct = $category->where('lang_id', $language_id)->first();
     @endphp
     @if(isset($ct))
         <li>
          <span value='{{$category->category_id}}'>
-        {{$category->categoryTranslations->where('lang_id', $language_id)->first()->category_name}}
+        {{$category->where('lang_id', $language_id)->first()->category_name}}
         </span>
             @if( count($category->siblings) > 0)
                 <ul>

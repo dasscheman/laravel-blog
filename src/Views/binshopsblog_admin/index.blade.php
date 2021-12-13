@@ -1,9 +1,8 @@
 @extends("binshopsblog_admin::layouts.admin_layout")
 @section("content")
-
-
     <h5>Admin - Manage Blog Posts</h5>
     <div class="container">
+        {{$posts->links()}}
         <div class="row">
             @forelse($posts as $post)
                 <div class="card col-lg-4 m-4" style="">
@@ -18,7 +17,6 @@
                         </dd>
                     </div>
                 </div>
-
                 <div class="card col-lg-6 m-4" style="">
                     <div class="card-body">
                         @foreach($languages as $lang)
@@ -61,5 +59,6 @@
                 <div class='alert alert-warning'>No posts to show you. Why don't you add one?</div>
             @endforelse
         </div>
+        {{$posts->links()}}
     </div>
 @endsection

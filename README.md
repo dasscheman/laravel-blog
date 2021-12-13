@@ -1,4 +1,5 @@
 # Laravel Blog
+This is a fork of 
 Have you worked with Wordpress? Developers call this package wordpress-like laravel blog.
 
 ### Contact us for any customization:
@@ -31,9 +32,13 @@ composer require laravel/ui
 php artisan ui vue --auth
 ```
 
-2- Run the following two commands to copy config file, migration files, and view files
-
-`php artisan vendor:publish --provider="BinshopsBlog\BinshopsBlogServiceProvider"`
+2- Add the following to the composer of your project:
+```
+"post-update-cmd": [
+  "php artisan vendor:publish --provider='BinshopsBlog\\BinshopsBlogServiceProvider\"'",
+  "php artisan vendor:publish --tag=\"public\" --force --provider='BinshopsBlog\\BinshopsBlogServiceProvider\"'"
+]
+```
 
 3- Execute migrations to create tables
 
@@ -79,22 +84,9 @@ php artisan ui vue --auth
 Congrats! Your blog is ready to use. (URLs are customizable in the config file)
   
   Admin panel URI: `/blog_admin`
-  Front URI: `/en/blog`
+  Front URI: `/blog`
 
 To see package on Packagist click this [Link](https://packagist.org/packages/binshops/laravel-blog)
-
-### Single Language Version
-To install the single language version of the package use version v8.1x:
-
-1- `composer require binshops/laravel-blog:v8.1.2`
-
-2- `php artisan vendor:publish --provider="BinshopsBlog\BinshopsBlogServiceProvider"`
-
-3- `php artisan vendor:publish --tag=laravel-fulltext`
-
-4- `php artisan migrate;`
-
-You can see the single version in "single-lang" branch.
 
 ## Important Notes
 - For laravel 8.x's default auth User model, change user model in `binshopsblog.php` to: `\App\Models\User::class`
@@ -114,7 +106,8 @@ You can see the single version in "single-lang" branch.
 - Other options include using Disqus comments or disabling comments
 
 ## Recent Changes  
-- **9.1.x** Multi language support
+- 9.2.x Custom fields.
+- 9.1.x Multi language support
 - 8.0.x Compatibility with Laravel 8.x
   
 ## What/who this package is for:
@@ -184,8 +177,9 @@ Try adding this to config/app.php:
 - Ensure that /public/blog_images (or whatever directory you set it to in the config) is writable by the server
 - You might need to set a higher memory limit, or upload smaller image files. This will depend on your server. I've used it to upload huge (10mb+) jpg images without problem, once the server was set up correctly to handle larger file uploads.
 
-## Version History    
-- **9.2.x** Stable version of package
+## Version History
+- 9.3.x Custom fields
+- 9.2.x Stable version of package
 - 9.0.x Multi-language support beta release
 - 8.0.x Compatibility with Laravel 8
 - 7.3.2 Some bug fixes

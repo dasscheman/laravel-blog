@@ -11,34 +11,25 @@ class BinshopsCategory extends Node
     public $siblings = array();
 
     public $fillable = [
-        'parent_id'
+        'parent_id',
+        'category_name',
+        'slug',
+        'category_description',
+        'lang_id'
     ];
 
     public static function boot()
     {
         parent::boot();
-
-        static::deleting(function ($category) { // before delete() method call this
-            $category->categoryTranslations()->delete();
-        });
     }
 
     /**
-     * The associated category translations
+     * The associated Language
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
-    public function categoryTranslations()
+    public function language()
     {
-        return $this->hasMany(BinshopsCategoryTranslation::class, "category_id");
-    }
-
-    /**
-     * The associated category translations
-     */
-    public function categoryTranslation()
-    {
-        return $this->hasOne(BinshopsCategoryTranslation::class, "category_id")
-            ->where('lang_id', Helpers::getLocaleId());
+        return $this->hasOne(BinshopsLanguage::class, 'id', 'lang_id');
     }
 
     /**
@@ -56,12 +47,36 @@ class BinshopsCategory extends Node
 
     public static function loadSiblingsWithList($node_list)
     {
-        for ($i = 0 ; sizeof($node_list) > $i ; $i++) {
+        for ($i = 0; sizeof($node_list) > $i; $i++) {
             $node_list[$i]->loadSiblings();
             if (sizeof($node_list[$i]->siblings) > 0) {
                 self::loadSiblingsWithList($node_list[$i]->siblings);
             }
         }
+    }
+
+    /**
+     * Returns the public facing URL of showing blog posts in this category
+     * @return string
+     */
+    public function url()
+    {
+        $theChainString = "";
+        $cat = $this->get();
+        $chain = $cat[0]->getAncestorsAndSelf();
+        foreach ($chain as $category) {
+            $theChainString .=  "/" . $category->slug;
+        }
+        return route("binshopsblog.view_category", [$theChainString]);
+    }
+
+    /**
+     * Returns the URL for an admin user to edit this category
+     * @return string
+     */
+    public function edit_url()
+    {
+        return route("binshopsblog.admin.categories.edit_category", $this->id);
     }
 
 //    public function parent()

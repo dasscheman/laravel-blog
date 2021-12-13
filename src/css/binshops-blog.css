@@ -28,3 +28,15 @@
 .binshops-cat-hierarchy {
     list-style-type: none !important;
 }
+
+.pagination {
+    display: flex;
+    justify-content: center;
+}
+
+.pagination li {
+    display: block;
+}
+.col-md-6 {
+    padding-bottom: 30px;
+}

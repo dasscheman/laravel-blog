@@ -1,25 +1,16 @@
 <div class="form-group">
-    <label for="language_list">Select Language</label>
-    <select id="language_list" name='lang_id' class='form-control'>
-        @foreach($language_list as $language)
-            <option  value='{{$language->id}}'
-                @if($language->locale == App::getLocale())selected="selected" @endif>
-                {{$language->name}}
-            </option>
-        @endforeach
-    </select>
-</div>
-<div class="form-group">
     <label for="blog_title">Blog Post Title</label>
-    <input type="text" class="form-control" required id="blog_title" aria-describedby="blog_title_help" name='title'
-           value="{{old("title",$post_translation->title)}}"                    oninput="populate_slug_field();"
-    >
+    <input type="text" class="form-control" required id="blog_title"
+           aria-describedby="blog_title_help" name='title'
+           value="{{old("title",$post_translation->title)}}"
+           oninput="populate_slug_field();">
     <small id="blog_title_help" class="form-text text-muted">The title of the blog post</small>
 </div>
 
 <div class="form-group">
     <label for="blog_subtitle">Subtitle</label>
-    <input type="text" class="form-control" id="blog_subtitle" aria-describedby="blog_subtitle_help" name='subtitle'
+    <input type="text" class="form-control" id="blog_subtitle"
+           aria-describedby="blog_subtitle_help" name='subtitle'
            value='{{old("subtitle",$post_translation->subtitle)}}'>
     <small id="blog_subtitle_help" class="form-text text-muted">The subtitle of the blog post (optional)</small>
 </div>
@@ -28,10 +19,13 @@
     <div class='col-sm-12 col-md-4'>
         <div class="form-group">
             <label for="blog_slug">Blog Post Slug</label>
-            <input type="text" class="form-control" id="blog_slug" aria-describedby="blog_slug_help" name='slug'
+            <input type="text" class="form-control" id="blog_slug"
+                   aria-describedby="blog_slug_help" name='slug'
                    value="{{old("slug",$post_translation->slug)}}">
-            <small id="blog_slug_help" class="form-text text-muted">The slug (leave blank to auto generate) - i.e.
-                {{route("binshopsblog.single", ["your-slug"])}}</small>
+            <small id="blog_slug_help" class="form-text text-muted">
+                The slug (leave blank to auto generate) - i.e.
+                {{route("binshopsblog.single", ["your-slug"])}}
+            </small>
         </div>
     </div>
     <div class='col-sm-6 col-md-4'>
@@ -39,14 +33,12 @@
             <label for="blog_is_published">Published?</label>
             <select name='is_published' class='form-control' id='blog_is_published'
                     aria-describedby='blog_is_published_help'>
-
                 <option @if(old("is_published",$post->is_published) == '1') selected='selected' @endif value='1'>
                     Published
                 </option>
                 <option @if(old("is_published",$post->is_published) == '0') selected='selected' @endif value='0'>Not
                     Published
                 </option>
-
             </select>
             <small id="blog_is_published_help" class="form-text text-muted">Should this be published? If not, then it
                 won't be
@@ -57,13 +49,13 @@
     <div class='col-sm-6 col-md-4'>
         <div class="form-group">
             <label for="blog_posted_at">Posted at</label>
-            <input type="text" class="form-control" id="blog_posted_at" aria-describedby="blog_posted_at_help"
-                   name='posted_at'
+            <input type="text" class="form-control" id="blog_posted_at"
+                   aria-describedby="blog_posted_at_help" name='posted_at'
                    value="{{old("posted_at",$post->posted_at ?? \Carbon\Carbon::now())}}">
-            <small id="blog_posted_at_help" class="form-text text-muted">When this should be published. If this value is
-                greater
-                than now ({{\Carbon\Carbon::now()}}) then it will not (yet) appear on your blog. Should be in the <code>YYYY-MM-DD
-                    HH:MM:SS</code> format.
+            <small id="blog_posted_at_help" class="form-text text-muted">
+                When this should be published. If this value is greater than now
+                ({{\Carbon\Carbon::now()}}) then it will not (yet) appear on your blog. Should be in the
+                <code>YYYY-MM-DD HH:MM:SS</code> format.
             </small>
         </div>
     </div>
@@ -100,8 +92,6 @@
     </div>
 @endif
 
-
-
 <div class="form-group">
     <label for="blog_seo_title">SEO: {{"<title>"}} tag (optional)</label>
     <input class="form-control" id="blog_seo_title" aria-describedby="blog_seo_title_help"
@@ -124,7 +114,6 @@
 </div>
 
 @if(config("binshopsblog.image_upload_enabled",true))
-
     <div class='bg-white pt-4 px-4 pb-0 my-2 mb-4 rounded border'>
         <style>
             .image_upload_other_sizes {
@@ -132,14 +121,11 @@
             }
         </style>
         <h4>Featured Images</h4>
-
-
         @foreach(config("binshopsblog.image_sizes") as $size_key =>$size_info)
             <div class="form-group mb-4 p-2
-        @if($loop->iteration>1)
+                @if($loop->iteration>1)
                     image_upload_other_sizes
-            @endif
-                    ">
+                @endif ">
                 @if($post_translation->has_image($size_info['basic_key']))
                     <div style='max-width:55px;  ' class='float-right m-2'>
                         <a style='cursor: zoom-in;' target='_blank' href='{{$post_translation->image_url($size_info['basic_key'])}}'>
@@ -157,21 +143,16 @@
                        aria-describedby="blog_{{$size_key}}_help">
 
                 @if($post_translation->has_image($size_info['basic_key']))
-                    <a style="color: darkred" href="{{route("binshopsblog.admin.remove_photo",[
-                        $post_translation->slug,
-                        $selected_lang
-                    ]
+                    <a style="color: darkred" href="{{route("binshopsblog.admin.remove_photo",[$post_translation->slug]
                     )}}">Remove Image</a>
                 @endif
             </div>
         @endforeach
-
         <p>
             By default it will resize for all images based on the first image. If you want to select specific images for
             each size, please click: <span onclick='$(this).parent().hide(); $(".image_upload_other_sizes").slideDown()'
-                                           class='btn btn-light btn-sm'>Show other sizes</span>
+            class='btn btn-light btn-sm'>Show other sizes</span>
         </p>
-
     </div>
 @else
     <div class='alert alert-warning'>Image uploads were disabled in binshopsblog.php config</div>
@@ -181,7 +162,6 @@
 <div class='bg-white pt-4 px-4 pb-0 my-2 mb-4 rounded border'>
     <h4>Categories:</h4>
     <div class='row'>
-
         @forelse($cat_ts as $translation)
             <div class="form-check col-sm-6 lang_id-{{$translation->lang_id}} categories">
                 <input class="category_checkbox" type="checkbox" value="1"
@@ -197,106 +177,15 @@
                 No categories
             </div>
         @endforelse
-
         <div class='col-md-12 my-3 text-center'>
-
-            <em><a class="a-link-cart-color" target='_blank' href='{{route("binshopsblog.admin.categories.create_category")}}'><i class="fa fa-external-link" aria-hidden="true"></i>
-                    Add new categories
-                    here</a></em>
+            <em><a class="a-link-cart-color" target='_blank' href='{{route("binshopsblog.admin.categories.create_category")}}'>
+                <i class="fa fa-external-link" aria-hidden="true"></i>
+                Add new categories here
+            </a></em>
         </div>
     </div>
 </div>
-
-<script>
-    SHOULD_AUTO_GEN_SLUG = false;
-    enableField()
-    function toggleCheckbox(event){
-        let categoryId = event.target.id.replace('category_check','');
-        if (event.target.checked){
-            let fieldCategories = document.getElementsByClassName('field_category_' + categoryId)
-            for (let i=0; i < fieldCategories.length; i++) {
-                fieldCategories[i].disabled = false;
-            }
-            return
-        }
-        // We cannot be sure which categories are selected, therefore, disable everything and check everything.
-        let fieldCategories = document.getElementsByClassName('field_category')
-        for (let i=0; i < fieldCategories.length; i++) {
-            if (fieldCategories[i].classList.contains('no_categories')) {
-                continue;
-            }
-            fieldCategories[i].disabled = true;
-        }
-        enableField()
-    }
-
-    function enableField() {
-        let categoriesCheckbox = document.getElementsByClassName('category_checkbox')
-        for (let i=0; i < categoriesCheckbox.length; i++) {
-            if (categoriesCheckbox[i].checked) {
-                let categoryId = categoriesCheckbox[i].id.replace('category_check','');
-                let fieldCategories = document.getElementsByClassName('field_category_' + categoryId)
-                for (let i=0; i < fieldCategories.length; i++) {
-                    fieldCategories[i].disabled = false;
-                }
-            }
-        }
-    }
-
-    /* Generate the slug field, if it was not touched by the user (or if it was an empty string) */
-    function populate_slug_field() {
-        var cat_slug = document.getElementById('blog_slug');
-        if (cat_slug.value.length < 1) {
-            // if the slug field is empty, make sure it auto generates
-            SHOULD_AUTO_GEN_SLUG = true;
-        }
-
-        if (SHOULD_AUTO_GEN_SLUG) {
-            // the slug hasn't been manually changed (or it was set above), so we should generate the slug
-            // This is done in two stages - one to remove non words/spaces etc, the another to replace white space (and underscore) with a -
-            cat_slug.value =document.getElementById("blog_title").value.toLowerCase()
-                .replace(/[^\w-_ ]+/g, '') // replace with nothing
-                .replace(/[_ ]+/g, '-') // replace _ and spaces with -
-                .substring(0,99); // limit str length
-
-        }
-    }
-
-    if (document.getElementById("blog_slug").value.length < 1) {
-        SHOULD_AUTO_GEN_SLUG = true;
-    } else {
-        SHOULD_AUTO_GEN_SLUG = false; // there is already a value in #category_slug, so lets pretend it was changed already.
-    }
-
-    let select = document.getElementById("language_list");
-    select.addEventListener("change", function(){
-        toggleCategories(this.value);
-    });
-
-    let defaultSelect = document.getElementsByClassName('category_checkbox')
-    for(let item = 0; item < select.length; item++) {
-        if(select[item].selected == true) {
-            toggleCategories(select[item].value);
-        }
-    };
-
-    function toggleCategories(lang_id){
-        let categories = document.getElementsByClassName('categories')
-        for(let item = 0; item < categories.length; item++) {
-            categories[item].hidden = false
-            for (let child = 0; child < categories[item].children.length; child++) {
-                categories[item].children[child].disabled = false
-            }
-        }
-        categories = document.getElementsByClassName('lang_id-' + lang_id)
-        for(let item = 0; item < categories.length; item++) {
-            categories[item].hidden = true
-            for (let child = 0; child < categories[item].children.length; child++) {
-                categories[item].children[child].disabled = true
-            }
-        }
-    }
-</script>
+<script src="{{asset('blog/js/category.js')}}"></script>
 
 @if( config("binshopsblog.use_wysiwyg") && config("binshopsblog.echo_html"))
     <script src="//cdn.ckeditor.com/4.15.0/full/ckeditor.js"></script>

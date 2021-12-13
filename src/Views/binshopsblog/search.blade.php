@@ -29,9 +29,9 @@
                     <ul class="binshops-cat-hierarchy">
                         @if($categories)
                             @include("binshopsblog::partials._category_partial", [
-    'category_tree' => $categories,
-    'name_chain' => $nameChain = ""
-    ])
+                                'category_tree' => $categories,
+                                'name_chain' => $nameChain = ""
+                            ])
                         @else
                             <span>No Categories</span>
                         @endif
@@ -45,6 +45,4 @@
 
         </div>
     </div>
-
-
 @endsection

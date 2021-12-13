@@ -15,7 +15,8 @@ class LoadLanguage
     {
         if (Session::has('locale')) {
             App::setLocale(Session::get('locale'));
-            $lang = BinshopsLanguage::where('locale', App::getLocale());
+            $lang = BinshopsLanguage::where('locale', App::getLocale())->first();
+            session()->put('lang_id', $lang->id);
             if ($lang->exists()) {
                 return $next($request);
             }
@@ -25,6 +26,7 @@ class LoadLanguage
         $lang = BinshopsLanguage::where('locale', $default_locale)
             ->first();
         App::setLocale($lang->locale);
+        session()->put('lang_id', $lang->id);
 
         return $next($request);
     }
