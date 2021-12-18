@@ -25,7 +25,6 @@ class BinshopsCommentWriterController extends Controller
 
     public function __construct()
     {
-        $this->middleware(UserCanManageBlogPosts::class);
         $this->middleware(LoadLanguage::class);
 
     }
@@ -40,7 +39,6 @@ class BinshopsCommentWriterController extends Controller
      */
     public function addNewComment(AddNewCommentRequest $request, $blog_post_slug)
     {
-
         if (config("binshopsblog.comments.type_of_comments_to_show", "built_in") !== 'built_in') {
             throw new \RuntimeException("Built in comments are disabled");
         }
