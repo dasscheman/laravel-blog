@@ -15,7 +15,7 @@
         </div>
 
         <div class="form-group">
-            <label for="category_category_name">Category Name</label>
+            <label for="category_category_name">@lang('blog.category_name_title')</label>
 
             <input type="text"
                    class="form-control"
@@ -26,7 +26,7 @@
                    name='category_name'
                    value="{{old("category_name",$category->category_name)}}"
             >
-            <small id="category_category_name_help" class="form-text text-muted">The name of the category</small>
+            <small id="category_category_name_help" class="form-text text-muted">@lang('blog.name_category')</small>
         </div>
 
         <div class="form-group">

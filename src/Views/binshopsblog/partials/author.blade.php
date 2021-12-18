@@ -1,1 +1,1 @@
-by <strong>{{$post->author->name}}</strong>
+@lang('blog.by') <strong>{{$post->author->name}}</strong>

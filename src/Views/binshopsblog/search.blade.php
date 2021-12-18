@@ -5,7 +5,7 @@
         <div class='col-sm-12'>
             <div class="row">
                 <div class="col-md-9">
-                    <h2>Search Results for {{$query}}</h2>
+                    <h2>@lang('blog.search_results_for') {{$query}}</h2>
 
                     @php $search_count = 0;@endphp
                     @forelse($search_results as $result)
@@ -13,19 +13,19 @@
                             @php $search_count += $search_count + 1; @endphp
                             <?php $post = $result->indexable; ?>
                             @if($post && is_a($post,\BinshopsBlog\Models\BinshopsPostTranslation::class))
-                                <h2>Search result #{{$search_count}}</h2>
+                                <h2>@lang('blog.search_result_#') {{$search_count}}</h2>
                                 @include("binshopsblog::partials.index_loop")
                             @else
 
-                                <div class='alert alert-danger'>Unable to show this search result - unknown type</div>
+                                <div class='alert alert-danger'>@lang('blog.unknown_search')</div>
                             @endif
                         @endif
                     @empty
-                        <div class='alert alert-danger'>Sorry, but there were no results!</div>
+                        <div class='alert alert-danger'>@lang('blog.no_results')</div>
                     @endforelse
                 </div>
                 <div class="col-md-3">
-                    <h6>Blog Categories</h6>
+                    <h6>@lang('blog.blog_categories')</h6>
                     <ul class="binshops-cat-hierarchy">
                         @if($categories)
                             @include("binshopsblog::partials._category_partial", [
@@ -33,7 +33,7 @@
                                 'name_chain' => $nameChain = ""
                             ])
                         @else
-                            <span>No Categories</span>
+                            <span>@lang('blog.no_categories')</span>
                         @endif
                     </ul>
                 </div>

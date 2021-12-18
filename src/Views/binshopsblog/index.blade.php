@@ -5,21 +5,19 @@
 @endsection
 
 @section("content")
-
     <div class='col-sm-12 binshopsblog_container'>
         @if(\Auth::check() && \Auth::user()->canManageBinshopsBlogPosts())
             <div class="text-center">
-                <p class='mb-1'>You are logged in as a blog admin user.
+                <p class='mb-1'>@lang('blog.you_are_admin')
                     <br>
                     <a href='{{route("binshopsblog.admin.index")}}'
                        class='btn border  btn-outline-primary btn-sm '>
                         <i class="fa fa-cogs" aria-hidden="true"></i>
-                        Go To Blog Admin Panel</a>
+                        @lang('blog.go_to_admin')</a>
                 </p>
             </div>
         @endif
         {{ $posts->links() }}
-{{--        <div class="row"`>--}}
             <div class="col-md-9">
                 @if(isset($binshopsblog_category) && $binshopsblog_category)
                     <h2 class='text-center'> {{$binshopsblog_category->category_name}}</h2>
@@ -31,28 +29,18 @@
                 @endif
 
                 <div class="card-columns">
-{{--                    <div class="container">--}}
-{{--                        <div class="row">--}}
-                            @forelse($posts as $post)
-{{--                                <div class="card">--}}
-{{--                                        sadfadsf--}}
-                                    @include("binshopsblog::partials.index_loop")
-{{--                                </div>--}}
-{{--                            @endforeach--}}
-                            @empty
-                                <div class="col-md-12">
-                                    <div class='alert alert-danger'>No posts!</div>
-                                </div>
-                            @endforelse
-{{--                        </div>--}}
-{{--                    </div>--}}
+                    @forelse($posts as $post)
+                        @include("binshopsblog::partials.index_loop")
+                    @empty
+                        <div class="col-md-12">
+                            <div class='alert alert-danger'>@lang('blog.no_posts')</div>
+                        </div>
+                    @endforelse
                 </div>
             </div>
-{{--        </div>--}}
 
         @if (config('binshopsblog.search.search_enabled') )
             @include('binshopsblog::sitewide.search_form')
             @endif
     </div>
-
 @endsection
