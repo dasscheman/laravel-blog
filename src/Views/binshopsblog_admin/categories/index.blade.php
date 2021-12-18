@@ -26,5 +26,4 @@
     <div class='text-center'>
         {{$categories->appends( [] )->links()}}
     </div>
-
-    @endsection
+@endsection

@@ -19,6 +19,7 @@
           'post_translation' => $post_translation
         ])
 
+        <input id="locale" name="locale" type="text" value="{{$locale}}" hidden>
         <input type='submit' name="submit_btn" class='btn btn-primary' value='Save Changes' >
 
     </form>

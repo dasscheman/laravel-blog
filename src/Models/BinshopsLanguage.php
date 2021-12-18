@@ -34,4 +34,10 @@ class BinshopsLanguage extends Model
         return $this->belongsTo(BinshopsCategory::class, 'category_id');
     }
 
+    public static function defaultLocale()
+    {
+        $default_locale = BinshopsConfiguration::get('DEFAULT_LANGUAGE_LOCALE');
+        return BinshopsLanguage::where('locale', $default_locale)
+            ->first();
+    }
 }

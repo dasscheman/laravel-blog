@@ -21,10 +21,7 @@ class LoadLanguage
                 return $next($request);
             }
         }
-
-        $default_locale = BinshopsConfiguration::get('DEFAULT_LANGUAGE_LOCALE');
-        $lang = BinshopsLanguage::where('locale', $default_locale)
-            ->first();
+        $lang = BinshopsLanguage::defaultLocale();
         App::setLocale($lang->locale);
         session()->put('lang_id', $lang->id);
 

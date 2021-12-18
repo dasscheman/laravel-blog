@@ -41,22 +41,21 @@ class BinshopsBlogServiceProvider extends ServiceProvider
         }
 
         foreach ([
-                     '2021_11_27_005425_move_category_translations_table.php',
-                     '2021_11_25_093500_edit_binshops_fields_table.php',
-                     '2021_07_30_093700_create_binshops_fields_categories_table.php',
-                     '2021_07_30_093600_create_binshops_fields_values_table.php',
-                     '2021_07_30_093500_create_binshops_fields_table.php',
-                     '2020_10_16_005400_create_binshops_categories_table.php',
-                     '2020_10_16_005425_create_binshops_category_translations_table.php',
-                     '2020_10_16_010039_create_binshops_posts_table.php',
-                     '2020_10_16_010049_create_binshops_post_translations_table.php',
-                     '2020_10_16_121230_create_binshops_comments_table.php',
-                     '2020_10_16_121728_create_binshops_uploaded_photos_table.php',
-                     '2020_10_16_004241_create_binshops_languages_table.php',
-                     '2020_10_22_132005_create_binshops_configurations_table.php',
-                     '2016_11_04_152913_create_laravel_fulltext_table.php'
-                 ] as $file) {
-
+            '2021_11_27_005425_move_category_translations_table.php',
+            '2021_11_25_093500_edit_binshops_fields_table.php',
+            '2021_07_30_093700_create_binshops_fields_categories_table.php',
+            '2021_07_30_093600_create_binshops_fields_values_table.php',
+            '2021_07_30_093500_create_binshops_fields_table.php',
+            '2020_10_16_005400_create_binshops_categories_table.php',
+            '2020_10_16_005425_create_binshops_category_translations_table.php',
+            '2020_10_16_010039_create_binshops_posts_table.php',
+            '2020_10_16_010049_create_binshops_post_translations_table.php',
+            '2020_10_16_121230_create_binshops_comments_table.php',
+            '2020_10_16_121728_create_binshops_uploaded_photos_table.php',
+            '2020_10_16_004241_create_binshops_languages_table.php',
+            '2020_10_22_132005_create_binshops_configurations_table.php',
+            '2016_11_04_152913_create_laravel_fulltext_table.php'
+        ] as $file) {
             $this->publishes([
                 __DIR__ . '/../migrations/' . $file => database_path('migrations/' . $file)
             ]);
